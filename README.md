@@ -1,3 +1,4 @@
+```
 # social-network
 
 
@@ -38,3 +39,4 @@ backend/
 │   │   ├── notifications.go
 ├── Dockerfile
 └── .env
+```
