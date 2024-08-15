@@ -8,7 +8,6 @@ import (
 	"Social/pkg/api"
 	"Social/pkg/db"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
@@ -25,11 +24,9 @@ func main() {
 		log.Fatalf("Error initializing database: %v", err)
 	}
 
-	// Initialize the router
-	router := mux.NewRouter()
-
 	// Initialize the routes from the api/router.go
-	api.InitializeRoutes(router)
+	mux := http.NewServeMux()
+	api.InitializeRoutes(mux)
 
 	// Get the port from the environment variables
 	port := os.Getenv("PORT")
@@ -39,7 +36,7 @@ func main() {
 
 	// Start the server
 	log.Printf("Server starting on port %s", port)
-	err = http.ListenAndServe(":"+port, router)
+	err = http.ListenAndServe(":"+port, mux)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
