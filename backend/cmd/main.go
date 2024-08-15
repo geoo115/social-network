@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"os"
 
+	"Social/pkg/api"
+	"Social/pkg/db"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"Social/pkg/api"
-	"Social/pkg/db/sqlite" 
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 	}
 
 	// Initialize SQLite connection
-	err = sqlite.Initialize()
+	err = db.Initialize()
 	if err != nil {
 		log.Fatalf("Error initializing database: %v", err)
 	}
