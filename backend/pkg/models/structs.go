@@ -39,7 +39,7 @@ type User struct {
 	Password    string    `json:"-"`
 	FirstName   string    `json:"first_name"`
 	LastName    string    `json:"last_name"`
-	DateOfBirth time.Time `json:"date_of_birth"`
+	DateOfBirth string    `json:"date_of_birth"`
 	Avatar      string    `json:"avatar,omitempty"`
 	Nickname    string    `json:"nickname,omitempty"`
 	AboutMe     string    `json:"about_me,omitempty"`
@@ -53,7 +53,7 @@ type Post struct {
 	UserID    int       `json:"user_id"`
 	Content   string    `json:"content"`
 	Image     string    `json:"image,omitempty"`
-	Privacy   string    `json:"privacy"` 
+	Privacy   string    `json:"privacy"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -93,7 +93,7 @@ type FollowRequest struct {
 	ID          int       `json:"id"`
 	SenderID    int       `json:"sender_id"`
 	RecipientID int       `json:"recipient_id"`
-	Status      string    `json:"status"` // Use constants for follow request statuses
+	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
@@ -105,6 +105,15 @@ type GroupEvent struct {
 	Description string    `json:"description"`
 	DayTime     time.Time `json:"day_time"`
 	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type GroupMembership struct {
+	ID       int        `json:"id"`
+	UserID   int        `json:"user_id"`
+	GroupID  int        `json:"group_id"`
+	JoinedAt time.Time  `json:"joined_at"`
+	LeftAt   *time.Time `json:"left_at,omitempty"`
 }
 
 // Like represents a like on a post

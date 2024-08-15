@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 
 	"Social/pkg/api/middlewares"
-	"Social/pkg/db/sqlite"
 	"Social/pkg/models"
-
-	"golang.org/x/crypto/bcrypt"
+	"Social/pkg/services"
 )
 
 // Register handles user registration
@@ -20,20 +17,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hash the user's password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	// Call the service to register the user
+	err := services.RegisterUser(req)
 	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
-		return
-	}
-
-	// Insert the user into the database
-	_, err = sqlite.DB.Exec(`
-		INSERT INTO users (email, password, first_name, last_name, date_of_birth, avatar, nickname, about_me) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		req.Email, hashedPassword, req.FirstName, req.LastName, req.DateOfBirth, req.Avatar, req.Nickname, req.AboutMe)
-	if err != nil {
-		http.Error(w, "Error saving user", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -49,31 +36,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find the user by email
-	var user models.User
-	err := sqlite.DB.QueryRow("SELECT id, email, password FROM users WHERE email = ?", req.Email).
-		Scan(&user.ID, &user.Email, &user.Password)
-	if err == sql.ErrNoRows {
-		http.Error(w, "User not found", http.StatusUnauthorized)
-		return
-	} else if err != nil {
-		http.Error(w, "Error fetching user", http.StatusInternalServerError)
-		return
-	}
-
-	// Compare the password with the stored hash
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
-		return
-	}
-
-	// Generate a JWT token
-	token, err := middlewares.GenerateJWT(user.ID)
+	// Call the service to authenticate the user
+	user, err := services.AuthenticateUser(req.Email, req.Password)
 	if err != nil {
-		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Send the token to the client
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	// Generate a new session ID
+	sessionID, err := middlewares.GenerateSessionID(user.ID)
+	if err != nil {
+		http.Error(w, "Error creating session", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the session cookie
+	middlewares.SetSessionCookie(w, sessionID)
+
+	// Respond to the client
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Login successful"})
 }

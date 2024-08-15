@@ -1,55 +1,44 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
-	"os"
 	"time"
-
-	"github.com/golang-jwt/jwt"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
-// generateJWT creates a JWT token for a user
-func GenerateJWT(userID int) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(), // Token expires after 72 hours
-	})
-
-	// Sign the token with the secret key
-	tokenString, err := token.SignedString(jwtSecret)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-// ValidateTokenMiddleware validates JWT token in Authorization header
-func ValidateTokenMiddleware(next http.Handler) http.Handler {
+// SessionAuthMiddleware checks for a valid session ID in the cookie
+func SessionAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get the token from the Authorization header
-		tokenString := r.Header.Get("Authorization")
-		if tokenString == "" {
-			http.Error(w, "Missing token", http.StatusUnauthorized)
+		sessionID, err := r.Cookie("session_id")
+		if err != nil {
+			http.Error(w, "Missing session ID", http.StatusUnauthorized)
 			return
 		}
 
-		// Parse the token
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, http.ErrNoCookie
-			}
-			return jwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+		userID, err := RetrieveSession(sessionID.Value)
+		if err != nil {
+			http.Error(w, "Invalid or expired session", http.StatusUnauthorized)
 			return
 		}
+
+		// Add user ID to request context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "userID", userID)
+		r = r.WithContext(ctx)
 
 		// Continue to the next handler
 		next.ServeHTTP(w, r)
+	})
+}
+
+// SetSessionCookie sets the session ID in a cookie
+func SetSessionCookie(w http.ResponseWriter, sessionID string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    sessionID,
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true, // Prevent JavaScript access
+		Secure:   true, // Set to true if using HTTPS
+		SameSite: http.SameSiteStrictMode,
 	})
 }

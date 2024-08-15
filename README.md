@@ -12,7 +12,10 @@ backend/
 │   │   │   ├── profile.go
 │   │   │   ├── posts.go
 │   │   │   ├── groups.go
+│   │   │   ├── comments.go
+│   │   │   ├── likedislike.go
 │   │   │   ├── chat.go
+│   │   │   ├── follow.go
 │   │   │   ├── notifications.go
 │   │   ├── middlewares/
 │   │   │   ├── auth.go
@@ -35,7 +38,10 @@ backend/
 │   │   ├── profile.go
 │   │   ├── posts.go
 │   │   ├── groups.go
-│   │   ├── chat.go
+│   │   │   ├── comments.go
+│   │   │   ├── likedislike.go
+│   │   │   ├── chat.go
+│   │   │   ├── follow.go
 │   │   ├── notifications.go
 ├── Dockerfile
 └── .env
