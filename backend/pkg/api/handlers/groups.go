@@ -9,39 +9,26 @@ import (
 	"strings"
 )
 
-// CreateGroup handles POST requests to create a new group
 func CreateGroup(w http.ResponseWriter, r *http.Request) {
 	var group models.Group
-	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	err := json.NewDecoder(r.Body).Decode(&group)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	userID, ok := r.Context().Value("userID").(int)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	group.CreatorID = userID
-
-	if err := services.CreateGroup(group); err != nil {
+	groupID, err := services.CreateGroup(group)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int{"group_id": groupID})
 }
 
 func GetGroup(w http.ResponseWriter, r *http.Request) {
-	// Extract groupID from URL path
-	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if len(segments) < 2 {
-		http.Error(w, "Group ID required", http.StatusBadRequest)
-		return
-	}
-
-	groupIDStr := segments[1]
-	groupID, err := strconv.Atoi(groupIDStr)
+	groupID, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/groups/"))
 	if err != nil {
 		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
@@ -49,86 +36,91 @@ func GetGroup(w http.ResponseWriter, r *http.Request) {
 
 	group, err := services.GetGroup(groupID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(group); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	json.NewEncoder(w).Encode(group)
 }
 
+func ListGroups(w http.ResponseWriter, r *http.Request) {
+	offset := r.URL.Query().Get("offset")
+	limit := r.URL.Query().Get("limit")
+	searchTerm := r.URL.Query().Get("search")
 
+	offsetInt, _ := strconv.Atoi(offset)
+	limitInt, _ := strconv.Atoi(limit)
 
-func JoinGroup(w http.ResponseWriter, r *http.Request) {
-	// Extract groupID from URL path
-	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if len(segments) < 3 {
-		http.Error(w, "Group ID required", http.StatusBadRequest)
-		return
-	}
-
-	groupIDStr := segments[2]
-	groupID, err := strconv.Atoi(groupIDStr)
+	groups, err := services.ListGroups(offsetInt, limitInt, searchTerm)
 	if err != nil {
-		http.Error(w, "Invalid group ID", http.StatusBadRequest)
-		return
-	}
-
-	userID, ok := r.Context().Value("userID").(int)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	if err := services.JoinGroup(userID, groupID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(groups)
 }
 
-
-func LeaveGroup(w http.ResponseWriter, r *http.Request) {
-	// Extract groupID from URL path
-	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if len(segments) < 3 {
-		http.Error(w, "Group ID required", http.StatusBadRequest)
-		return
-	}
-
-	groupIDStr := segments[2]
-	groupID, err := strconv.Atoi(groupIDStr)
+func InviteToGroup(w http.ResponseWriter, r *http.Request) {
+	var invitation models.GroupInvitation
+	err := json.NewDecoder(r.Body).Decode(&invitation)
 	if err != nil {
-		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	userID, ok := r.Context().Value("userID").(int)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	if err := services.LeaveGroup(userID, groupID); err != nil {
+	err = services.InviteToGroup(invitation)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 }
 
+func CreateGroupRequest(w http.ResponseWriter, r *http.Request) {
+	var request models.GroupRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	err = services.CreateGroupRequest(request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
 
 func CreateGroupEvent(w http.ResponseWriter, r *http.Request) {
 	var event models.GroupEvent
-	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	err := json.NewDecoder(r.Body).Decode(&event)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	if err := services.CreateGroupEvent(event); err != nil {
+	err = services.CreateGroupEvent(event)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func RSVPEvent(w http.ResponseWriter, r *http.Request) {
+	var rsvp models.EventRSVP
+	err := json.NewDecoder(r.Body).Decode(&rsvp)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	err = services.RSVPEvent(rsvp)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -137,54 +129,59 @@ func CreateGroupEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetGroupEvent(w http.ResponseWriter, r *http.Request) {
-	// Extract eventID from URL path
-	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if len(segments) < 3 {
-		http.Error(w, "Event ID required", http.StatusBadRequest)
+	pathSegments := strings.Split(strings.TrimPrefix(r.URL.Path, "/groups/"), "/")
+	if len(pathSegments) < 3 || pathSegments[1] != "events" {
+		http.Error(w, "Invalid event request", http.StatusBadRequest)
 		return
 	}
 
-	eventIDStr := segments[2]
-	eventID, err := strconv.Atoi(eventIDStr)
+	groupID, err := strconv.Atoi(pathSegments[0])
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	eventID, err := strconv.Atoi(pathSegments[2])
 	if err != nil {
 		http.Error(w, "Invalid event ID", http.StatusBadRequest)
 		return
 	}
 
-	event, err := services.GetGroupEvent(eventID)
+	event, err := services.GetGroupEvent(groupID, eventID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(event); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	json.NewEncoder(w).Encode(event)
 }
 
-func UpdateGroupEvent(w http.ResponseWriter, r *http.Request) {
-	// Extract eventID from URL path
-	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if len(segments) < 3 {
-		http.Error(w, "Event ID required", http.StatusBadRequest)
+func JoinGroup(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/groups/")
+	pathSegments := strings.Split(path, "/")
+
+	if len(pathSegments) < 2 || pathSegments[1] != "join" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	eventIDStr := segments[2]
-	eventID, err := strconv.Atoi(eventIDStr)
+	groupID, err := strconv.Atoi(pathSegments[0])
 	if err != nil {
-		http.Error(w, "Invalid event ID", http.StatusBadRequest)
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
 	}
 
-	var event models.GroupEvent
-	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	var requestBody struct {
+		UserID int `json:"user_id"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	if err := services.UpdateGroupEvent(eventID, event); err != nil {
+	err = services.JoinGroup(groupID, requestBody.UserID)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -192,22 +189,70 @@ func UpdateGroupEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteGroupEvent(w http.ResponseWriter, r *http.Request) {
-	// Extract eventID from URL path
-	segments := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	if len(segments) < 3 {
-		http.Error(w, "Event ID required", http.StatusBadRequest)
+func LeaveGroup(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/groups/")
+	pathSegments := strings.Split(path, "/")
+
+	if len(pathSegments) < 2 || pathSegments[1] != "leave" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	eventIDStr := segments[2]
-	eventID, err := strconv.Atoi(eventIDStr)
+	groupID, err := strconv.Atoi(pathSegments[0])
 	if err != nil {
-		http.Error(w, "Invalid event ID", http.StatusBadRequest)
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := services.DeleteGroupEvent(eventID); err != nil {
+	var requestBody struct {
+		UserID int `json:"user_id"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	err = services.LeaveGroup(groupID, requestBody.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func RespondToInvitation(w http.ResponseWriter, r *http.Request, invitationID int) {
+	var response struct {
+		Status string `json:"status"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&response)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	err = services.RespondToInvitation(invitationID, response.Status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func RespondToGroupRequest(w http.ResponseWriter, r *http.Request, requestID int) {
+	var response struct {
+		Status string `json:"status"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&response)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	err = services.RespondToGroupRequest(requestID, response.Status)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

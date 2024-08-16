@@ -5,6 +5,7 @@ import (
 	"Social/pkg/api/middlewares"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -29,6 +30,10 @@ func InitializeRoutes(mux *http.ServeMux) {
 
 	// Group routes
 	mux.Handle("/groups/", middlewares.SessionAuthMiddleware(http.HandlerFunc(handleGroupRoutes)))
+
+	// Invitations and Requests routes
+	mux.Handle("/invitations/", middlewares.SessionAuthMiddleware(http.HandlerFunc(handleInvitationRoutes)))
+	mux.Handle("/requests/", middlewares.SessionAuthMiddleware(http.HandlerFunc(handleRequestRoutes)))
 
 	// Chat routes
 	mux.Handle("/chats/", middlewares.SessionAuthMiddleware(http.HandlerFunc(handleChatRoutes)))
@@ -156,61 +161,79 @@ func handleCommentRoutes(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGroupRoutes(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	method := r.Method
-	segments := strings.Split(strings.TrimPrefix(path, "/"), "/")
+	// Extract the path after "/groups/"
+	path := strings.TrimPrefix(r.URL.Path, "/groups/")
+	pathSegments := strings.Split(path, "/")
 
-	// Check for empty path
-	if len(segments) == 0 {
-		http.Error(w, "Not found", http.StatusNotFound)
+	if len(pathSegments) == 0 {
+		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	if segments[0] != "groups" {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-
-	switch method {
-	case http.MethodPost:
-		if len(segments) == 2 {
-			switch segments[1] {
-			case "events":
-				handlers.CreateGroupEvent(w, r)
-			case "join":
-				handlers.JoinGroup(w, r)
-			case "leave":
-				handlers.LeaveGroup(w, r)
-			default:
-				handlers.CreateGroup(w, r)
-			}
-		} else {
-			http.Error(w, "Not found", http.StatusNotFound)
-		}
-
+	switch r.Method {
 	case http.MethodGet:
-		if len(segments) == 2 {
-			handlers.GetGroup(w, r)
-		} else if len(segments) == 3 && segments[2] == "events" {
-			handlers.GetGroupEvent(w, r)
+		if len(pathSegments) == 2 && pathSegments[1] == "events" {
+			handlers.GetGroupEvent(w, r) // Handle GET /groups/{groupID}/events/{eventID}
 		} else {
-			http.Error(w, "Not found", http.StatusNotFound)
+			handlers.GetGroup(w, r) // Handle GET /groups/{groupID}
 		}
-
-	case http.MethodPut:
-		if len(segments) == 3 && segments[2] == "events" {
-			handlers.UpdateGroupEvent(w, r)
+	case http.MethodPost:
+		if len(pathSegments) == 1 {
+			handlers.CreateGroup(w, r) // Handle POST /groups/
+		} else if len(pathSegments) == 2 && pathSegments[1] == "join" {
+			handlers.JoinGroup(w, r) // Handle POST /groups/{groupID}/join
+		} else if len(pathSegments) == 2 && pathSegments[1] == "leave" {
+			handlers.LeaveGroup(w, r) // Handle POST /groups/{groupID}/leave
+		} else if len(pathSegments) == 2 && pathSegments[1] == "events" {
+			handlers.CreateGroupEvent(w, r) // Handle POST /groups/{groupID}/events
 		} else {
-			http.Error(w, "Not found", http.StatusNotFound)
+			http.Error(w, "Bad request", http.StatusBadRequest)
 		}
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+func handleInvitationRoutes(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/invitations/")
+	pathSegments := strings.Split(path, "/")
 
-	case http.MethodDelete:
-		if len(segments) == 3 && segments[2] == "events" {
-			handlers.DeleteGroupEvent(w, r)
-		} else {
-			http.Error(w, "Not found", http.StatusNotFound)
-		}
+	if len(pathSegments) < 2 || pathSegments[1] != "response" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 
+	invitationID, err := strconv.Atoi(pathSegments[0])
+	if err != nil {
+		http.Error(w, "Invalid invitation ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPost:
+		handlers.RespondToInvitation(w, r, invitationID)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func handleRequestRoutes(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/requests/")
+	pathSegments := strings.Split(path, "/")
+
+	if len(pathSegments) < 2 || pathSegments[1] != "response" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	requestID, err := strconv.Atoi(pathSegments[0])
+	if err != nil {
+		http.Error(w, "Invalid request ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPost:
+		handlers.RespondToGroupRequest(w, r, requestID)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}

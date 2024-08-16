@@ -58,7 +58,6 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// Group represents a group created by a user
 type Group struct {
 	ID          int       `json:"id"`
 	CreatorID   int       `json:"creator_id"`
@@ -68,7 +67,50 @@ type Group struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// Chat represents a chat message
+type GroupEvent struct {
+	ID          int       `json:"id"`
+	GroupID     int       `json:"group_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	DayTime     time.Time `json:"day_time"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type GroupInvitation struct {
+	ID          int       `json:"id"`
+	GroupID     int       `json:"group_id"`
+	InviterID   int       `json:"inviter_id"`
+	InviteeID   int       `json:"invitee_id"`
+	Status      string    `json:"status"` // pending, accepted, rejected
+	InvitedAt   time.Time `json:"invited_at"`
+	RespondedAt time.Time `json:"responded_at,omitempty"`
+}
+
+type GroupRequest struct {
+	ID          int       `json:"id"`
+	GroupID     int       `json:"group_id"`
+	RequesterID int       `json:"requester_id"`
+	Status      string    `json:"status"` // pending, accepted, rejected
+	RequestedAt time.Time `json:"requested_at"`
+	RespondedAt time.Time `json:"responded_at,omitempty"`
+}
+
+type EventRSVP struct {
+	ID          int       `json:"id"`
+	EventID     int       `json:"event_id"`
+	UserID      int       `json:"user_id"`
+	Status      string    `json:"status"` // going, not going
+	RespondedAt time.Time `json:"responded_at"`
+}
+
+type GroupMembership struct {
+	UserID   int        `json:"user_id"`
+	GroupID  int        `json:"group_id"`
+	JoinedAt time.Time  `json:"joined_at"`
+	LeftAt   *time.Time `json:"left_at,omitempty"`
+}
+
 type Chat struct {
 	ID          int       `json:"id"`
 	SenderID    int       `json:"sender_id"`
@@ -95,25 +137,6 @@ type FollowRequest struct {
 	RecipientID int       `json:"recipient_id"`
 	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"created_at"`
-}
-
-// GroupEvent represents an event within a group
-type GroupEvent struct {
-	ID          int       `json:"id"`
-	GroupID     int       `json:"group_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	DayTime     time.Time `json:"day_time"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-}
-
-type GroupMembership struct {
-	ID       int        `json:"id"`
-	UserID   int        `json:"user_id"`
-	GroupID  int        `json:"group_id"`
-	JoinedAt time.Time  `json:"joined_at"`
-	LeftAt   *time.Time `json:"left_at,omitempty"`
 }
 
 // Like represents a like on a post

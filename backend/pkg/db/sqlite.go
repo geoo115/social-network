@@ -64,11 +64,76 @@ func applyMigrations(db *sql.DB) error {
 			create: `CREATE TABLE IF NOT EXISTS groups (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				creator_id INTEGER NOT NULL,
-				title TEXT NOT NULL,
+				title VARCHAR(255) NOT NULL,
 				description TEXT,
-				created_at DATETIME,
-				updated_at DATETIME,
+				created_at DATETIME NOT NULL,
+				updated_at DATETIME NOT NULL,
 				FOREIGN KEY (creator_id) REFERENCES users(id)
+			)`,
+		},
+		{
+			name: "group_invitations",
+			create: `CREATE TABLE IF NOT EXISTS group_invitations (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				group_id INTEGER NOT NULL,
+				inviter_id INTEGER NOT NULL,
+				invitee_id INTEGER NOT NULL,
+				status VARCHAR(20) NOT NULL DEFAULT 'pending',
+				invited_at DATETIME NOT NULL,
+				responded_at DATETIME,
+				FOREIGN KEY (group_id) REFERENCES groups(id),
+				FOREIGN KEY (inviter_id) REFERENCES users(id),
+				FOREIGN KEY (invitee_id) REFERENCES users(id)
+			)`,
+		},
+		{
+			name: "group_requests",
+			create: `CREATE TABLE IF NOT EXISTS group_requests (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				group_id INTEGER NOT NULL,
+				requester_id INTEGER NOT NULL,
+				status VARCHAR(20) NOT NULL DEFAULT 'pending',
+				requested_at DATETIME NOT NULL,
+				responded_at DATETIME,
+				FOREIGN KEY (group_id) REFERENCES groups(id),
+				FOREIGN KEY (requester_id) REFERENCES users(id)
+			)`,
+		},
+		{
+			name: "group_events",
+			create: `CREATE TABLE IF NOT EXISTS group_events (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				group_id INTEGER NOT NULL,
+				title VARCHAR(255) NOT NULL,
+				description TEXT,
+				day_time DATETIME NOT NULL,
+				created_at DATETIME NOT NULL,
+				updated_at DATETIME NOT NULL,
+				FOREIGN KEY (group_id) REFERENCES groups(id)
+			)`,
+		},
+		{
+			name: "event_rsvps",
+			create: `CREATE TABLE IF NOT EXISTS event_rsvps (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				event_id INTEGER NOT NULL,
+				user_id INTEGER NOT NULL,
+				status VARCHAR(20) NOT NULL, -- "going" or "not going"
+				responded_at DATETIME NOT NULL,
+				FOREIGN KEY (event_id) REFERENCES group_events(id),
+				FOREIGN KEY (user_id) REFERENCES users(id)
+			)`,
+		},
+		{
+			name: "group_memberships",
+			create: `CREATE TABLE IF NOT EXISTS group_memberships (
+				user_id INTEGER NOT NULL,
+				group_id INTEGER NOT NULL,
+				joined_at DATETIME NOT NULL,
+				left_at DATETIME,
+				PRIMARY KEY (user_id, group_id),
+				FOREIGN KEY (user_id) REFERENCES users(id),
+				FOREIGN KEY (group_id) REFERENCES groups(id)
 			)`,
 		},
 		{
@@ -107,31 +172,6 @@ func applyMigrations(db *sql.DB) error {
 				created_at DATETIME,
 				FOREIGN KEY (sender_id) REFERENCES users(id),
 				FOREIGN KEY (recipient_id) REFERENCES users(id)
-			)`,
-		},
-		{
-			name: "group_events",
-			create: `CREATE TABLE IF NOT EXISTS group_events (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				group_id INTEGER NOT NULL,
-				title TEXT NOT NULL,
-				description TEXT,
-				day_time DATETIME NOT NULL,
-				created_at DATETIME,
-				updated_at DATETIME,
-				FOREIGN KEY (group_id) REFERENCES groups(id)
-			)`,
-		},
-		{
-			name: "group_memberships",
-			create: `CREATE TABLE IF NOT EXISTS group_memberships (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				user_id INTEGER NOT NULL,
-				group_id INTEGER NOT NULL,
-				joined_at DATETIME,
-				left_at DATETIME,
-				FOREIGN KEY (user_id) REFERENCES users(id),
-				FOREIGN KEY (group_id) REFERENCES groups(id)
 			)`,
 		},
 		{

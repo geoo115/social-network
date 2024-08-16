@@ -1,11 +1,12 @@
 -- 000007_create_group_events_table.up.sql
 CREATE TABLE group_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    group_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
+     id INT PRIMARY KEY AUTOINCREMENT,
+    group_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
     description TEXT,
-    day_time TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    day_time DATETIME NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
     FOREIGN KEY (group_id) REFERENCES groups(id)
 );
 

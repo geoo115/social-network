@@ -1,12 +1,11 @@
 -- 000003_create_groups_table.up.sql
 CREATE TABLE groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    creator_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
+      id INT PRIMARY KEY AUTOINCREMENT,
+    creator_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (creator_id) REFERENCES users(id)
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
 );
 
 -- Indexes
