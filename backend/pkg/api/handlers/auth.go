@@ -7,6 +7,8 @@ import (
 	"Social/pkg/api/middlewares"
 	"Social/pkg/models"
 	"Social/pkg/services"
+	"errors"
+	"log"
 )
 
 // Register handles user registration
@@ -17,10 +19,20 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate request payload
+	if err := validateRegisterRequest(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// Call the service to register the user
-	err := services.RegisterUser(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := services.RegisterUser(req); err != nil {
+		if errors.Is(err, services.ErrEmailInUse) {
+			http.Error(w, "Email already in use", http.StatusConflict)
+			return
+		}
+		log.Printf("Error registering user: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -36,16 +48,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate request payload
+	if err := validateLoginRequest(req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// Call the service to authenticate the user
 	user, err := services.AuthenticateUser(req.Email, req.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		if errors.Is(err, services.ErrInvalidCredentials) {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			return
+		}
+		log.Printf("Error authenticating user: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	// Generate a new session ID
 	sessionID, err := middlewares.GenerateSessionID(user.ID)
 	if err != nil {
+		log.Printf("Error generating session ID: %v", err)
 		http.Error(w, "Error creating session", http.StatusInternalServerError)
 		return
 	}

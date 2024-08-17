@@ -50,7 +50,13 @@ func InitializeRoutes(mux *http.ServeMux) {
 
 func handleProfileRoutes(w http.ResponseWriter, r *http.Request) {
 	// Extract userID from URL path
-	userIDStr := r.URL.Path[len("/profile/"):]
+	userIDStr := strings.TrimPrefix(r.URL.Path, "/profile/")
+
+	// Check if userID is not empty
+	if userIDStr == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
 
 	switch r.Method {
 	case "GET":

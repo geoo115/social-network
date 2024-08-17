@@ -32,20 +32,21 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-// User represents a user in the social network
 type User struct {
-	ID          int       `json:"id"`
-	Email       string    `json:"email"`
-	Password    string    `json:"-"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	DateOfBirth string    `json:"date_of_birth"`
-	Avatar      string    `json:"avatar,omitempty"`
-	Nickname    string    `json:"nickname,omitempty"`
-	AboutMe     string    `json:"about_me,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+    ID          int       `json:"id"`
+    Email       string    `json:"email"`
+    FirstName   string    `json:"first_name"`
+    LastName    string    `json:"last_name"`
+	Password    string    `json:"password"`
+    DateOfBirth string    `json:"date_of_birth"`
+    Avatar      string    `json:"avatar"`
+    Nickname    string    `json:"nickname"`
+    AboutMe     string    `json:"about_me"`
+    IsPrivate   bool      `json:"is_private"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
 }
+
 
 // Post represents a post created by a user
 type Post struct {
