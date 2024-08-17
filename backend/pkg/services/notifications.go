@@ -6,11 +6,10 @@ import (
 	"fmt"
 )
 
-// GetNotifications retrieves notifications for a user
 func GetNotifications(userID int) ([]models.Notification, error) {
 	var notifications []models.Notification
 
-	rows, err := db.DB.Query(`SELECT id, user_id, message, is_read, created_at FROM notifications WHERE user_id = ?`, userID)
+	rows, err := db.DB.Query(`SELECT id, user_id, type, message, is_read, created_at, details FROM notifications WHERE user_id = ?`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query notifications: %w", err)
 	}
@@ -18,7 +17,7 @@ func GetNotifications(userID int) ([]models.Notification, error) {
 
 	for rows.Next() {
 		var notification models.Notification
-		if err := rows.Scan(&notification.ID, &notification.UserID, &notification.Message, &notification.IsRead, &notification.CreatedAt); err != nil {
+		if err := rows.Scan(&notification.ID, &notification.UserID, &notification.Type, &notification.Message, &notification.IsRead, &notification.CreatedAt, &notification.Details); err != nil {
 			return nil, fmt.Errorf("failed to scan notification: %w", err)
 		}
 		notifications = append(notifications, notification)
@@ -32,13 +31,27 @@ func GetNotifications(userID int) ([]models.Notification, error) {
 }
 
 func CreateNotification(notification models.Notification) error {
-	query := `
-		INSERT INTO notifications (user_id, message, is_read, created_at)
-		VALUES (?, ?, ?, ?)`
+	if notification.Type == "" || notification.Message == "" {
+		return fmt.Errorf("notification type or message cannot be empty")
+	}
 
-	_, err := db.DB.Exec(query, notification.UserID, notification.Message, notification.IsRead, notification.CreatedAt)
+	query := `
+		INSERT INTO notifications (user_id, type, message, is_read, created_at, details)
+		VALUES (?, ?, ?, ?, ?, ?)`
+
+	_, err := db.DB.Exec(query, notification.UserID, notification.Type, notification.Message, notification.IsRead, notification.CreatedAt, notification.Details)
 	if err != nil {
 		return fmt.Errorf("failed to create notification: %w", err)
+	}
+
+	return nil
+}
+
+func MarkNotificationAsRead(notificationID int) error {
+	query := `UPDATE notifications SET is_read = true WHERE id = ?`
+	_, err := db.DB.Exec(query, notificationID)
+	if err != nil {
+		return fmt.Errorf("failed to mark notification as read: %w", err)
 	}
 
 	return nil

@@ -2,21 +2,27 @@ package services
 
 import (
 	"Social/pkg/db"
-	"Social/pkg/models"
+	"database/sql"
 	"fmt"
 	"time"
 )
 
 // LikePost adds a like to a post
 func LikePost(userID, postID int) error {
-	like := models.Like{
-		UserID:    userID,
-		PostID:    postID,
-		CreatedAt: time.Now(),
+	// Check if the user already liked the post
+	row := db.DB.QueryRow(`SELECT 1 FROM likes WHERE user_id = ? AND post_id = ?`, userID, postID)
+	var exists int
+	err := row.Scan(&exists)
+	if err == nil {
+		return fmt.Errorf("post already liked by this user")
+	}
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check like status: %w", err)
 	}
 
-	_, err := db.DB.Exec(`INSERT INTO likes (user_id, post_id, created_at) VALUES (?, ?, ?)`,
-		like.UserID, like.PostID, like.CreatedAt)
+	// Add the like if it does not exist
+	_, err = db.DB.Exec(`INSERT INTO likes (user_id, post_id, created_at) VALUES (?, ?, ?)`,
+		userID, postID, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to add like: %w", err)
 	}
@@ -25,14 +31,20 @@ func LikePost(userID, postID int) error {
 
 // DislikePost adds a dislike to a post
 func DislikePost(userID, postID int) error {
-	dislike := models.Dislike{
-		UserID:    userID,
-		PostID:    postID,
-		CreatedAt: time.Now(),
+	// Check if the user already disliked the post
+	row := db.DB.QueryRow(`SELECT 1 FROM dislikes WHERE user_id = ? AND post_id = ?`, userID, postID)
+	var exists int
+	err := row.Scan(&exists)
+	if err == nil {
+		return fmt.Errorf("post already disliked by this user")
+	}
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check dislike status: %w", err)
 	}
 
-	_, err := db.DB.Exec(`INSERT INTO dislikes (user_id, post_id, created_at) VALUES (?, ?, ?)`,
-		dislike.UserID, dislike.PostID, dislike.CreatedAt)
+	// Add the dislike if it does not exist
+	_, err = db.DB.Exec(`INSERT INTO dislikes (user_id, post_id, created_at) VALUES (?, ?, ?)`,
+		userID, postID, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to add dislike: %w", err)
 	}

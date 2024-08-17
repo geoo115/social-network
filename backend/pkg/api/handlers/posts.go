@@ -4,11 +4,11 @@ import (
 	"Social/pkg/models"
 	"Social/pkg/services"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 )
 
-// CreatePost handles POST requests to create a new post
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	var post models.Post
 	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
@@ -16,7 +16,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Assume userID is set in the context (you should set it in your middleware)
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -26,7 +25,8 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	err := services.CreatePost(post)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Error creating post: %v", err) // Log detailed error
+		http.Error(w, "Failed to create post", http.StatusInternalServerError)
 		return
 	}
 

@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// CreateFollowRequest creates a new follow request in the database
 func CreateFollowRequest(request models.FollowRequest) error {
 	request.CreatedAt = time.Now()
 
@@ -20,7 +19,6 @@ func CreateFollowRequest(request models.FollowRequest) error {
 	return nil
 }
 
-// GetFollowRequest retrieves a follow request by ID
 func GetFollowRequest(id int) (models.FollowRequest, error) {
 	row := db.DB.QueryRow(`SELECT id, sender_id, recipient_id, status, created_at
 		FROM follow_requests WHERE id = ?`, id)
@@ -35,7 +33,6 @@ func GetFollowRequest(id int) (models.FollowRequest, error) {
 	return request, nil
 }
 
-// UpdateFollowRequest updates the status of a follow request
 func UpdateFollowRequest(id int, status string) error {
 	_, err := db.DB.Exec(`UPDATE follow_requests SET status = ? WHERE id = ?`, status, id)
 	if err != nil {
@@ -44,11 +41,18 @@ func UpdateFollowRequest(id int, status string) error {
 	return nil
 }
 
-// DeleteFollowRequest deletes a follow request by ID
 func DeleteFollowRequest(id int) error {
 	_, err := db.DB.Exec(`DELETE FROM follow_requests WHERE id = ?`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete follow request: %w", err)
+	}
+	return nil
+}
+
+func AddFollower(followerID int, followedID int) error {
+	_, err := db.DB.Exec("INSERT INTO followers (follower_id, followed_id) VALUES (?, ?)", followerID, followedID)
+	if err != nil {
+		return fmt.Errorf("failed to add follower: %w", err)
 	}
 	return nil
 }

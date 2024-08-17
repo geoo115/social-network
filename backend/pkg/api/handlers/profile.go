@@ -9,9 +9,8 @@ import (
 	"strconv"
 )
 
-// getCurrentUserID extracts the current user ID from the request context.
 func getCurrentUserID(r *http.Request) (int, error) {
-	userIDInterface := r.Context().Value("userID")
+	userIDInterface := r.Context().Value("user_id")
 	if userIDInterface == nil {
 		return 0, errors.New("user ID not found in context")
 	}
@@ -23,7 +22,6 @@ func getCurrentUserID(r *http.Request) (int, error) {
 
 	return userID, nil
 }
-
 func GetProfile(w http.ResponseWriter, r *http.Request, userIDStr string) {
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"log"
 	"time"
 )
 
@@ -21,20 +22,22 @@ func GenerateSessionID(userID int) (string, error) {
 	return sessionID, nil
 }
 
-// RetrieveSession retrieves session data by session ID
 func RetrieveSession(sessionID string) (int, error) {
 	var userID int
 	var expiresAt time.Time
 
 	err := db.DB.QueryRow("SELECT user_id, expires_at FROM sessions WHERE session_id = ?", sessionID).Scan(&userID, &expiresAt)
 	if err != nil {
+		log.Printf("RetrieveSession error: %v", err)
 		return 0, err
 	}
 
 	if time.Now().After(expiresAt) {
-		return 0, sql.ErrNoRows // Session expired
+		log.Println("Session expired")
+		return 0, sql.ErrNoRows
 	}
 
+	log.Printf("Session valid for userID: %d", userID)
 	return userID, nil
 }
 

@@ -33,20 +33,19 @@ type LoginRequest struct {
 }
 
 type User struct {
-    ID          int       `json:"id"`
-    Email       string    `json:"email"`
-    FirstName   string    `json:"first_name"`
-    LastName    string    `json:"last_name"`
+	ID          int       `json:"id"`
+	Email       string    `json:"email"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
 	Password    string    `json:"password"`
-    DateOfBirth string    `json:"date_of_birth"`
-    Avatar      string    `json:"avatar"`
-    Nickname    string    `json:"nickname"`
-    AboutMe     string    `json:"about_me"`
-    IsPrivate   bool      `json:"is_private"`
-    CreatedAt   time.Time `json:"created_at"`
-    UpdatedAt   time.Time `json:"updated_at"`
+	DateOfBirth string    `json:"date_of_birth"`
+	Avatar      string    `json:"avatar"`
+	Nickname    string    `json:"nickname"`
+	AboutMe     string    `json:"about_me"`
+	IsPrivate   bool      `json:"is_private"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
-
 
 // Post represents a post created by a user
 type Post struct {
@@ -126,9 +125,11 @@ type Chat struct {
 type Notification struct {
 	ID        int       `json:"id"`
 	UserID    int       `json:"user_id"`
+	Type      string    `json:"type"`
 	Message   string    `json:"message"`
 	IsRead    bool      `json:"is_read"`
 	CreatedAt time.Time `json:"created_at"`
+	Details   string    `json:"details"`
 }
 
 // FollowRequest represents a follow request between users

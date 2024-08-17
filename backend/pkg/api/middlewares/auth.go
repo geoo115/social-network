@@ -2,11 +2,11 @@ package middlewares
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 )
 
-// SessionAuthMiddleware checks for a valid session ID in the cookie
 func SessionAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionID, err := r.Cookie("session_id")
@@ -23,8 +23,11 @@ func SessionAuthMiddleware(next http.Handler) http.Handler {
 
 		// Add user ID to request context
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "user_id", userID)
 		r = r.WithContext(ctx)
+
+		// Log for debugging
+		log.Printf("Session authenticated, userID: %d", userID)
 
 		// Continue to the next handler
 		next.ServeHTTP(w, r)

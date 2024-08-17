@@ -33,18 +33,18 @@ func applyMigrations(db *sql.DB) error {
 		{
 			name: "users",
 			create: `CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    date_of_birth TEXT NOT NULL,
-    avatar TEXT,
-    nickname TEXT,
-    about_me TEXT,
-    is_private BOOLEAN DEFAULT FALSE,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				email TEXT UNIQUE NOT NULL,
+				password TEXT NOT NULL,
+				first_name TEXT NOT NULL,
+				last_name TEXT NOT NULL,
+				date_of_birth TEXT NOT NULL,
+				avatar TEXT,
+				nickname TEXT,
+				about_me TEXT,
+				is_private BOOLEAN DEFAULT FALSE,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL
 			)`,
 		},
 		{
@@ -63,23 +63,21 @@ func applyMigrations(db *sql.DB) error {
 		{
 			name: "followers",
 			create: `CREATE TABLE IF NOT EXISTS followers (
-    follower_id INTEGER NOT NULL,
-    followed_id INTEGER NOT NULL,
-    PRIMARY KEY (follower_id, followed_id),
-    FOREIGN KEY (follower_id) REFERENCES users(id),
-    FOREIGN KEY (followed_id) REFERENCES users(id)
+				follower_id INTEGER NOT NULL,
+				followed_id INTEGER NOT NULL,
+				PRIMARY KEY (follower_id, followed_id),
+				FOREIGN KEY (follower_id) REFERENCES users(id),
+				FOREIGN KEY (followed_id) REFERENCES users(id)
 			)`,
 		},
 		{
 			name: "groups",
-			create: `CREATE TABLE IF NOT EXISTS groups (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				creator_id INTEGER NOT NULL,
-				title TEXT NOT NULL,
-				description TEXT,
-				created_at TEXT NOT NULL,
-				updated_at TEXT NOT NULL,
-				FOREIGN KEY (creator_id) REFERENCES users(id)
+			create: `CREATE TABLE IF NOT EXISTS followers (
+				follower_id INTEGER NOT NULL,
+				followed_id INTEGER NOT NULL,
+				PRIMARY KEY (follower_id, followed_id),
+				FOREIGN KEY (follower_id) REFERENCES users(id),
+				FOREIGN KEY (followed_id) REFERENCES users(id)
 			)`,
 		},
 		{
@@ -166,11 +164,12 @@ func applyMigrations(db *sql.DB) error {
 			name: "notifications",
 			create: `CREATE TABLE IF NOT EXISTS notifications (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				user_id INTEGER NOT NULL,
-				message TEXT NOT NULL,
-				is_read BOOLEAN NOT NULL,
-				created_at TEXT,
-				FOREIGN KEY (user_id) REFERENCES users(id)
+				user_id INTEGER,
+				type TEXT,
+				message TEXT,
+				is_read BOOLEAN,
+				created_at DATETIME,
+				details TEXT
 			)`,
 		},
 		{

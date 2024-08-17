@@ -4,6 +4,7 @@ import (
 	"Social/pkg/api/handlers"
 	"Social/pkg/api/middlewares"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,6 +44,12 @@ func InitializeRoutes(mux *http.ServeMux) {
 
 	// Follow Request routes
 	mux.Handle("/follow-requests/", middlewares.SessionAuthMiddleware(http.HandlerFunc(handleFollowRequestRoutes)))
+
+	// Follow Request Acceptance
+	mux.Handle("/follow-requests/accept", middlewares.SessionAuthMiddleware(http.HandlerFunc(handlers.AcceptFollowRequest)))
+
+	// Follow Request Rejection
+	mux.Handle("/follow-requests/reject", middlewares.SessionAuthMiddleware(http.HandlerFunc(handlers.RejectFollowRequest)))
 
 	// Fallback for not found routes
 	mux.Handle("/", http.NotFoundHandler())
@@ -282,7 +289,6 @@ func handleChatRoutes(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleNotificationRoutes(w http.ResponseWriter, r *http.Request) {
-	// Ensure that the path is exactly /notifications
 	if r.URL.Path != "/notifications" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
@@ -293,38 +299,44 @@ func handleNotificationRoutes(w http.ResponseWriter, r *http.Request) {
 		handlers.GetNotifications(w, r)
 	case http.MethodPost:
 		handlers.CreateNotification(w, r)
+	case http.MethodPut:
+		handlers.MarkNotificationAsRead(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 func handleFollowRequestRoutes(w http.ResponseWriter, r *http.Request) {
-	// Ensure that the path starts with /follow-requests/
+	log.Printf("Request Method: %s, Request Path: %s", r.Method, r.URL.Path)
+
+	// Ensure the path has the expected prefix
 	if !strings.HasPrefix(r.URL.Path, "/follow-requests/") {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	// Extract the ID from the URL path, if present
+	// Extract the ID, handling the trailing slash
 	id := strings.TrimPrefix(r.URL.Path, "/follow-requests/")
 	id = strings.Trim(id, "/")
 
+	log.Printf("Parsed ID: %s", id)
+
 	switch r.Method {
-	case "POST":
+	case http.MethodPost:
 		handlers.CreateFollowRequest(w, r)
-	case "GET":
+	case http.MethodGet:
 		if id != "" {
 			handlers.GetFollowRequest(w, r, id)
 		} else {
 			http.Error(w, "ID required", http.StatusBadRequest)
 		}
-	case "PUT":
+	case http.MethodPut:
 		if id != "" {
 			handlers.UpdateFollowRequest(w, r, id)
 		} else {
 			http.Error(w, "ID required", http.StatusBadRequest)
 		}
-	case "DELETE":
+	case http.MethodDelete:
 		if id != "" {
 			handlers.DeleteFollowRequest(w, r, id)
 		} else {
