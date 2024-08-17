@@ -4,16 +4,14 @@ import (
 	"Social/pkg/db"
 	"Social/pkg/models"
 	"fmt"
-	"time"
 )
 
-// SendMessage sends a message to a user or group
 func SendMessage(message models.Chat) error {
 	query := `
 		INSERT INTO chats (sender_id, recipient_id, group_id, message, is_group, created_at) 
 		VALUES (?, ?, ?, ?, ?, ?)`
 
-	_, err := db.DB.Exec(query, message.SenderID, message.RecipientID, message.GroupID, message.Message, message.IsGroup, time.Now())
+	_, err := db.DB.Exec(query, message.SenderID, message.RecipientID, message.GroupID, message.Message, message.IsGroup, message.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
@@ -21,16 +19,17 @@ func SendMessage(message models.Chat) error {
 	return nil
 }
 
-// GetMessages retrieves messages between two users or in a group
 func GetMessages(userID, recipientID int, groupID int) ([]models.Chat, error) {
-	var messages []models.Chat
+	fmt.Printf("Executing query with userID: %d, recipientID: %d, groupID: %d\n", userID, recipientID, groupID)
 
+	var messages []models.Chat
 	query := `
 		SELECT id, sender_id, recipient_id, group_id, message, is_group, created_at
 		FROM chats
-		WHERE (sender_id = ? AND recipient_id = ?)
-		   OR (sender_id = ? AND recipient_id = ?)
-		   OR (group_id = ? AND is_group = ?)
+		WHERE
+			(sender_id = ? AND recipient_id = ?)
+			OR (sender_id = ? AND recipient_id = ?)
+			OR (group_id = ? AND is_group = ?)
 		ORDER BY created_at`
 
 	rows, err := db.DB.Query(query, userID, recipientID, recipientID, userID, groupID, true)

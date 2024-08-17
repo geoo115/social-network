@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // SendMessage handles POST requests to send a message
 func SendMessage(w http.ResponseWriter, r *http.Request) {
 	var message models.Chat
 	if err := json.NewDecoder(r.Body).Decode(&message); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -24,6 +25,11 @@ func SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	message.SenderID = userID
 
+	// Optionally, you can format the timestamp if necessary
+	if message.CreatedAt.IsZero() {
+		message.CreatedAt = time.Now()
+	}
+
 	if err := services.SendMessage(message); err != nil {
 		http.Error(w, "Failed to send message: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -31,8 +37,6 @@ func SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
-
-// GetMessages handles GET requests to retrieve messages
 func GetMessages(w http.ResponseWriter, r *http.Request, recipientIDStr string, groupIDStr string) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {

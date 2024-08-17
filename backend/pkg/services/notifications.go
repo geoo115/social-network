@@ -30,3 +30,16 @@ func GetNotifications(userID int) ([]models.Notification, error) {
 
 	return notifications, nil
 }
+
+func CreateNotification(notification models.Notification) error {
+	query := `
+		INSERT INTO notifications (user_id, message, is_read, created_at)
+		VALUES (?, ?, ?, ?)`
+
+	_, err := db.DB.Exec(query, notification.UserID, notification.Message, notification.IsRead, notification.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("failed to create notification: %w", err)
+	}
+
+	return nil
+}

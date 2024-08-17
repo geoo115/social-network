@@ -193,6 +193,7 @@ func handleGroupRoutes(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
 func handleInvitationRoutes(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/invitations/")
 	pathSegments := strings.Split(path, "/")
@@ -275,15 +276,17 @@ func handleChatRoutes(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleNotificationRoutes(w http.ResponseWriter, r *http.Request) {
-	// Ensure that the path is exactly /notifications for GET requests
+	// Ensure that the path is exactly /notifications
 	if r.URL.Path != "/notifications" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		handlers.GetNotifications(w, r)
+	case http.MethodPost:
+		handlers.CreateNotification(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
