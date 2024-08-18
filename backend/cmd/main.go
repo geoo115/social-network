@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"Social/pkg/api"
+	"Social/pkg/api/middlewares"
 	"Social/pkg/db"
 
 	"github.com/joho/godotenv"
@@ -27,7 +28,7 @@ func main() {
 	// Initialize the routes from the api/router.go
 	mux := http.NewServeMux()
 	api.InitializeRoutes(mux)
-
+	corsMux := middlewares.EnableCORS(mux)
 	// Get the port from the environment variables
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -36,7 +37,7 @@ func main() {
 
 	// Start the server
 	log.Printf("Server starting on port %s", port)
-	err = http.ListenAndServe(":"+port, mux)
+	err = http.ListenAndServe(":"+port, corsMux)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
