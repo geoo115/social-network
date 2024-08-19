@@ -10,28 +10,30 @@ import (
 )
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
-	var post models.Post
-	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
+    var post models.Post
+    if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
 
-	userID, ok := r.Context().Value("userID").(int)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	post.UserID = userID
+    userID, ok := r.Context().Value("userID").(int)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    post.UserID = userID
 
-	err := services.CreatePost(post)
-	if err != nil {
-		log.Printf("Error creating post: %v", err) // Log detailed error
-		http.Error(w, "Failed to create post", http.StatusInternalServerError)
-		return
-	}
+    log.Printf("Creating post with UserID: %d", userID)
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})
+    err := services.CreatePost(post)
+    if err != nil {
+        log.Printf("Error creating post: %v", err)
+        http.Error(w, "Failed to create post", http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})
 }
 
 // GetPost handles GET requests to retrieve a specific post

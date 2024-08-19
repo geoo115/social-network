@@ -18,7 +18,10 @@ backend/
 │   │   │   ├── follow.go
 │   │   │   ├── notifications.go
 │   │   ├── middlewares/
+│   │   │   ├── cors.go
 │   │   │   ├── auth.go
+│   │   │   ├── session.go
+│   │   ├── router/
 │   │   ├── router.go
 │   ├── db/
 │   │   ├── migrations/

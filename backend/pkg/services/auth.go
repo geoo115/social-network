@@ -48,8 +48,8 @@ func RegisterUser(user models.RegisterRequest) error {
 	}
 
 	// Insert the new user
-	_, err = tx.Exec(`INSERT INTO users (email, password, first_name, last_name, date_of_birth, avatar, nickname, about_me, created_at, updated_at) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	_, err = tx.Exec(`INSERT INTO users (email, password, first_name, last_name, date_of_birth, avatar, nickname, about_me,is_private ,created_at, updated_at) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		user.Email,
 		hashedPassword,
 		user.FirstName,
@@ -58,6 +58,7 @@ func RegisterUser(user models.RegisterRequest) error {
 		user.Avatar,
 		user.Nickname,
 		user.AboutMe,
+		user.IsPrivate,
 		time.Now(),
 		time.Now(),
 	)
@@ -78,7 +79,7 @@ func AuthenticateUser(email, password string) (models.User, error) {
 	var user models.User
 
 	// Retrieve user by email
-	row := db.DB.QueryRow("SELECT id, email, password, first_name, last_name, date_of_birth, avatar, nickname, about_me, created_at, updated_at FROM users WHERE email = ?", email)
+	row := db.DB.QueryRow("SELECT id, email, password, first_name, last_name, date_of_birth, avatar, nickname, about_me,is_private ,created_at, updated_at FROM users WHERE email = ?", email)
 	err := row.Scan(
 		&user.ID,
 		&user.Email,
@@ -89,6 +90,7 @@ func AuthenticateUser(email, password string) (models.User, error) {
 		&user.Avatar,
 		&user.Nickname,
 		&user.AboutMe,
+		&user.IsPrivate,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

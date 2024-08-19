@@ -24,6 +24,7 @@ type RegisterRequest struct {
 	Avatar      string `json:"avatar,omitempty"`
 	Nickname    string `json:"nickname,omitempty"`
 	AboutMe     string `json:"about_me,omitempty"`
+	IsPrivate   bool   `json:"is_private"`
 }
 
 // LoginRequest represents the login form

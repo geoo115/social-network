@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 )
@@ -21,15 +20,10 @@ func SessionAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Add user ID to request context
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "user_id", userID)
+		ctx = context.WithValue(ctx, "userID", userID)
 		r = r.WithContext(ctx)
 
-		// Log for debugging
-		log.Printf("Session authenticated, userID: %d", userID)
-
-		// Continue to the next handler
 		next.ServeHTTP(w, r)
 	})
 }
@@ -40,8 +34,9 @@ func SetSessionCookie(w http.ResponseWriter, sessionID string) {
 		Name:     "session_id",
 		Value:    sessionID,
 		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true, // Prevent JavaScript access
-		Secure:   true, // Set to true if using HTTPS
+		HttpOnly: true,
+		Secure:   false, // Set to true for production with HTTPS
 		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
 	})
 }

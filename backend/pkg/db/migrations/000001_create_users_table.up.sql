@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     avatar TEXT,
     nickname TEXT,
     about_me TEXT,
+    is_private BOOLEAN DEFAULT FALSE,
     created_at DATETIME,
     updated_at DATETIME,
     UNIQUE(email)
