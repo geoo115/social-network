@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// CreateFollowRequest handles POST requests to create a follow request
 func CreateFollowRequest(w http.ResponseWriter, r *http.Request) {
 	var request models.FollowRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -29,8 +30,12 @@ func CreateFollowRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Follow request created successfully",
+	})
 }
 
+// GetFollowRequest handles GET requests to retrieve a specific follow request
 func GetFollowRequest(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -51,6 +56,7 @@ func GetFollowRequest(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 }
 
+// UpdateFollowRequest handles PUT requests to update a follow request
 func UpdateFollowRequest(w http.ResponseWriter, r *http.Request, idStr string) {
 	var request models.FollowRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -70,8 +76,12 @@ func UpdateFollowRequest(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Follow request updated successfully",
+	})
 }
 
+// DeleteFollowRequest handles DELETE requests to delete a follow request
 func DeleteFollowRequest(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -85,8 +95,12 @@ func DeleteFollowRequest(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Follow request deleted successfully",
+	})
 }
 
+// AcceptFollowRequest handles POST requests to accept a follow request
 func AcceptFollowRequest(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	id, err := strconv.Atoi(idStr)
@@ -115,9 +129,12 @@ func AcceptFollowRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Follow request accepted and follower added successfully",
+	})
 }
 
-// RejectFollowRequest handles rejecting a follow request
+// RejectFollowRequest handles POST requests to reject a follow request
 func RejectFollowRequest(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	id, err := strconv.Atoi(idStr)
@@ -133,4 +150,7 @@ func RejectFollowRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Follow request rejected successfully",
+	})
 }

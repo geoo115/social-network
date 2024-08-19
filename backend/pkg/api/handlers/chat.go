@@ -35,8 +35,14 @@ func SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Send a success message
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Message sent successfully",
+	})
 }
+
+// GetMessages handles GET requests to retrieve messages for a specific recipient or group
 func GetMessages(w http.ResponseWriter, r *http.Request, recipientIDStr string, groupIDStr string) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
@@ -70,8 +76,8 @@ func GetMessages(w http.ResponseWriter, r *http.Request, recipientIDStr string, 
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(messages); err != nil {
 		http.Error(w, "Failed to encode messages: "+err.Error(), http.StatusInternalServerError)
-		return
 	}
 }

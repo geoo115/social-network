@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"Social/pkg/services"
@@ -21,6 +22,7 @@ func LikePost(w http.ResponseWriter, r *http.Request, postID int) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Post liked successfully"})
 }
 
 // DislikePost handles POST requests to dislike a post
@@ -38,4 +40,5 @@ func DislikePost(w http.ResponseWriter, r *http.Request, postID int) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Post disliked successfully"})
 }

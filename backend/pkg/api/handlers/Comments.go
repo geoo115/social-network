@@ -29,6 +29,9 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Comment created successfully",
+	})
 }
 
 // GetComment handles GET requests to retrieve a specific comment
@@ -45,9 +48,9 @@ func GetComment(w http.ResponseWriter, r *http.Request, commentIDStr string) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(comment); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -71,6 +74,9 @@ func UpdateComment(w http.ResponseWriter, r *http.Request, commentIDStr string) 
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Comment updated successfully",
+	})
 }
 
 // DeleteComment handles DELETE requests to delete a comment
@@ -87,4 +93,7 @@ func DeleteComment(w http.ResponseWriter, r *http.Request, commentIDStr string) 
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Comment deleted successfully",
+	})
 }

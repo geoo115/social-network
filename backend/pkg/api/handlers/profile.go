@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// getCurrentUserID retrieves the user ID from the request context.
 func getCurrentUserID(r *http.Request) (int, error) {
 	userIDInterface := r.Context().Value("user_id")
 	if userIDInterface == nil {
@@ -22,7 +23,10 @@ func getCurrentUserID(r *http.Request) (int, error) {
 
 	return userID, nil
 }
+
+// GetProfile handles retrieving a user's profile information.
 func GetProfile(w http.ResponseWriter, r *http.Request, userIDStr string) {
+	// Parse the requested user ID
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
@@ -36,18 +40,21 @@ func GetProfile(w http.ResponseWriter, r *http.Request, userIDStr string) {
 		return
 	}
 
+	// Retrieve profile information
 	profile, posts, followers, following, err := services.GetProfile(requesterID, userID)
 	if err != nil {
-		if err.Error() == "profile not found" {
+		switch err.Error() {
+		case "profile not found":
 			http.Error(w, "Profile not found", http.StatusNotFound)
-		} else if err.Error() == "profile is private and you are not a follower" {
+		case "profile is private and you are not a follower":
 			http.Error(w, "Profile is private and you are not a follower", http.StatusForbidden)
-		} else {
+		default:
 			http.Error(w, "Failed to retrieve profile", http.StatusInternalServerError)
 		}
 		return
 	}
 
+	// Create response structure
 	response := struct {
 		User      models.User   `json:"user"`
 		Posts     []models.Post `json:"posts"`
@@ -60,27 +67,30 @@ func GetProfile(w http.ResponseWriter, r *http.Request, userIDStr string) {
 		Following: following,
 	}
 
+	// Encode response as JSON
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, "Failed to encode profile", http.StatusInternalServerError)
 	}
 }
 
+// UpdateProfile handles updating a user's profile information.
 func UpdateProfile(w http.ResponseWriter, r *http.Request, userIDStr string) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Parse the user ID from the request URL
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	err = services.UpdateProfile(userID, user)
-	if err != nil {
-		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+	// Update the profile
+	if err := services.UpdateProfile(userID, user); err != nil {
+		http.Error(w, "Failed to update profile: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
