@@ -95,4 +95,5 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request, userIDStr string) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Profile updated successfully"})
 }

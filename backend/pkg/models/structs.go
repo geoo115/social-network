@@ -57,6 +57,9 @@ type Post struct {
 	Privacy   string    `json:"privacy"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Comments  []Comment `json:"comments,omitempty"`
+	Likes     int       `json:"likes"`
+	Dislikes  int       `json:"dislikes"`
 }
 
 type Group struct {

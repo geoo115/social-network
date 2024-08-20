@@ -73,7 +73,6 @@ func GetProfile(requesterID, userID int) (models.User, []models.Post, []models.U
 	return user, posts, followers, following, nil
 }
 
-// Helper functions to fetch posts, followers, and following
 func fetchPosts(userID int) ([]models.Post, error) {
 	rows, err := db.DB.Query(`SELECT id, user_id, content, image, privacy, created_at, updated_at FROM posts WHERE user_id = ?`, userID)
 	if err != nil {
@@ -87,9 +86,61 @@ func fetchPosts(userID int) ([]models.Post, error) {
 		if err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.Image, &post.Privacy, &post.CreatedAt, &post.UpdatedAt); err != nil {
 			return nil, err
 		}
+
+		// Fetch comments for the post
+		comments, err := fetchComments(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Comments = comments
+
+		// Fetch likes count for the post
+		likes, err := fetchLikes(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Likes = likes
+
+		// Fetch dislikes count for the post
+		dislikes, err := fetchDislikes(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Dislikes = dislikes
+
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func fetchComments(postID int) ([]models.Comment, error) {
+	rows, err := db.DB.Query(`SELECT id, user_id, post_id, content, created_at, updated_at FROM comments WHERE post_id = ?`, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []models.Comment
+	for rows.Next() {
+		var comment models.Comment
+		if err := rows.Scan(&comment.ID, &comment.UserID, &comment.PostID, &comment.Content, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+	return comments, nil
+}
+
+func fetchLikes(postID int) (int, error) {
+	var count int
+	err := db.DB.QueryRow(`SELECT COUNT(*) FROM likes WHERE post_id = ?`, postID).Scan(&count)
+	return count, err
+}
+
+func fetchDislikes(postID int) (int, error) {
+	var count int
+	err := db.DB.QueryRow(`SELECT COUNT(*) FROM dislikes WHERE post_id = ?`, postID).Scan(&count)
+	return count, err
 }
 
 func fetchFollowers(userID int) ([]models.User, error) {
