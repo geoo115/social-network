@@ -131,7 +131,7 @@ func CreateGroupEvent(w http.ResponseWriter, r *http.Request) {
 
 // RSVPEvent handles POST requests to RSVP to a group event
 func RSVPEvent(w http.ResponseWriter, r *http.Request) {
-	var rsvp models.EventRSVP
+	var rsvp models.EventRespond
 	err := json.NewDecoder(r.Body).Decode(&rsvp)
 	if err != nil {
 		http.Error(w, "Invalid input: "+err.Error(), http.StatusBadRequest)

@@ -120,7 +120,7 @@ func CreateGroupEvent(event models.GroupEvent) error {
 	return nil
 }
 
-func RSVPEvent(rsvp models.EventRSVP) error {
+func RSVPEvent(rsvp models.EventRespond) error {
 	now := time.Now()
 	rsvp.RespondedAt = now
 

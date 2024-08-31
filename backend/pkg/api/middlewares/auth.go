@@ -21,7 +21,7 @@ func SessionAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, "user_id", userID)
+		ctx = context.WithValue(ctx, "userID", userID)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

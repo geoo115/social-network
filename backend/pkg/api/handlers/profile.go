@@ -11,7 +11,7 @@ import (
 
 // getCurrentUserID retrieves the user ID from the request context.
 func getCurrentUserID(r *http.Request) (int, error) {
-	userIDInterface := r.Context().Value("user_id")
+	userIDInterface := r.Context().Value("userID")
 	if userIDInterface == nil {
 		return 0, errors.New("user ID not found in context")
 	}

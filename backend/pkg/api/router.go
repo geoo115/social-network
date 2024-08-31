@@ -12,6 +12,15 @@ func InitializeRoutes(mux *http.ServeMux) {
 	mux.Handle("/register", http.HandlerFunc(handlers.Register))
 	mux.Handle("/login", http.HandlerFunc(handlers.Login))
 
+	mux.Handle("/auth/google/login", http.HandlerFunc(handlers.GoogleLogin))
+	mux.Handle("/auth/google/callback", http.HandlerFunc(handlers.GoogleCallback))
+
+	mux.Handle("/auth/facebook/login", http.HandlerFunc(handlers.FacebookLogin))
+	mux.Handle("/auth/facebook/callback", http.HandlerFunc(handlers.FacebookCallback))
+
+	mux.Handle("/auth/github/login", http.HandlerFunc(handlers.GitHubLogin))
+	mux.Handle("/auth/github/callback", http.HandlerFunc(handlers.GitHubCallback))
+
 	// Profile routes (protected routes)
 	mux.Handle("/profile/", middlewares.SessionAuthMiddleware(http.HandlerFunc(router.HandleProfileRoutes)))
 
