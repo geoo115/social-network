@@ -4,38 +4,39 @@ import (
 	"Social/pkg/models"
 	"Social/pkg/services"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-// SendMessage handles POST requests to send a message
 func SendMessage(w http.ResponseWriter, r *http.Request) {
-	var message models.Chat
-	if err := json.NewDecoder(r.Body).Decode(&message); err != nil {
-		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
+	// Check if userID is set correctly
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
+	var message models.Chat
+	if err := json.NewDecoder(r.Body).Decode(&message); err != nil {
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	message.SenderID = userID
 
-	// Optionally, you can format the timestamp if necessary
 	if message.CreatedAt.IsZero() {
 		message.CreatedAt = time.Now()
 	}
+
+	log.Printf("Processed message for storage: %+v", message)
 
 	if err := services.SendMessage(message); err != nil {
 		http.Error(w, "Failed to send message: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Send a success message
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Message sent successfully",

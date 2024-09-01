@@ -1,42 +1,29 @@
 package router
 
 import (
-	"Social/pkg/api/handlers"
 	"net/http"
-	"strings"
+	"Social/pkg/api/handlers"
+	"github.com/gorilla/websocket"
 )
 
 func HandleChatRoutes(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	segments := strings.Split(strings.TrimPrefix(path, "/chats/"), "/")
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
 
-	if len(segments) < 2 {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
+    upgrader := websocket.Upgrader{
+        CheckOrigin: func(r *http.Request) bool {
+            return true // Adjust this as per your CORS policy
+        },
+    }
 
-	action := segments[0]
-	recipientIDStr := segments[1]
-	groupIDStr := ""
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        http.Error(w, "Failed to upgrade to WebSocket", http.StatusInternalServerError)
+        return
+    }
 
-	if len(segments) > 2 {
-		groupIDStr = segments[2]
-	}
-
-	switch r.Method {
-	case "POST":
-		if action == "send" {
-			handlers.SendMessage(w, r)
-		} else {
-			http.Error(w, "Not found", http.StatusNotFound)
-		}
-	case "GET":
-		if action == "messages" {
-			handlers.GetMessages(w, r, recipientIDStr, groupIDStr)
-		} else {
-			http.Error(w, "Not found", http.StatusNotFound)
-		}
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
+    // Ensure that HandleWebSocket is passed the connection
+    handlers.HandleWebSocket(conn)
 }

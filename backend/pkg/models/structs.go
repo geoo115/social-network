@@ -148,14 +148,15 @@ type EventRespond struct {
 }
 
 type Chat struct {
-	ID          int       `json:"id"`
-	SenderID    int       `json:"sender_id"`
-	RecipientID int       `json:"recipient_id"`
-	GroupID     int       `json:"group_id,omitempty"`
-	Message     string    `json:"message"`
-	IsGroup     bool      `json:"is_group"`
-	CreatedAt   time.Time `json:"created_at"`
+    ID          int       `json:"id"`
+    SenderID    int       `json:"senderID"`
+    RecipientID int       `json:"recipientID"`
+    GroupID     int       `json:"groupID,omitempty"`
+    Message     string    `json:"message"`
+    IsGroup     bool      `json:"isGroup"`
+    CreatedAt   time.Time `json:"createdAt"`
 }
+
 
 // Notification represents a notification for a user
 type Notification struct {

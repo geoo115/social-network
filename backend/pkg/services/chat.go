@@ -4,9 +4,12 @@ import (
 	"Social/pkg/db"
 	"Social/pkg/models"
 	"fmt"
+	"log"
 )
 
 func SendMessage(message models.Chat) error {
+	log.Printf("Sending message: %+v", message)
+
 	query := `
 		INSERT INTO chats (sender_id, recipient_id, group_id, message, is_group, created_at) 
 		VALUES (?, ?, ?, ?, ?, ?)`
