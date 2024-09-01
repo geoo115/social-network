@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"Social/pkg/api"
+	"Social/pkg/api/handlers"
 	"Social/pkg/api/middlewares"
 	"Social/pkg/db"
 
@@ -25,10 +26,14 @@ func main() {
 		log.Fatalf("Error initializing database: %v", err)
 	}
 
-	// Initialize the routes from the api/router.go
+	// Initialize the routes
 	mux := http.NewServeMux()
 	api.InitializeRoutes(mux)
 	corsMux := middlewares.EnableCORS(mux)
+
+	// Start the WebSocket message handling goroutine
+	go handlers.HandleMessages()
+
 	// Get the port from the environment variables
 	port := os.Getenv("PORT")
 	if port == "" {
