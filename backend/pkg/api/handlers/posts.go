@@ -4,36 +4,55 @@ import (
 	"Social/pkg/models"
 	"Social/pkg/services"
 	"encoding/json"
-	"log"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
-    var post models.Post
-    if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	r.ParseMultipartForm(10 << 20) // Limit your max memory size
 
-    userID, ok := r.Context().Value("userID").(int)
-    if !ok {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        return
-    }
-    post.UserID = userID
+	// Retrieve the file from the form-data
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Unable to retrieve the file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
 
-    log.Printf("Creating post with UserID: %d", userID)
+	// Define the path to save the file
+	uploadDir := "../../uploads" 
+	filePath := fmt.Sprintf("%s/%s", uploadDir, handler.Filename)
 
-    err := services.CreatePost(post)
-    if err != nil {
-        log.Printf("Error creating post: %v", err)
-        http.Error(w, "Failed to create post", http.StatusInternalServerError)
-        return
-    }
+	// Ensure the upload directory exists
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		err := os.MkdirAll(uploadDir, os.ModePerm)
+		if err != nil {
+			http.Error(w, "Unable to create upload directory", http.StatusInternalServerError)
+			return
+		}
+	}
 
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})
+	// Create a file in the defined path
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		http.Error(w, "Unable to save the file", http.StatusInternalServerError)
+		return
+	}
+	defer outFile.Close()
+
+	// Copy the file content to the destination file
+	_, err = io.Copy(outFile, file)
+	if err != nil {
+		http.Error(w, "Unable to save the file", http.StatusInternalServerError)
+		return
+	}
+
+	// Proceed with other logic like saving post metadata to the database
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})
 }
 
 // GetPost handles GET requests to retrieve a specific post
