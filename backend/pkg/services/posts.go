@@ -10,12 +10,15 @@ import (
 
 // CreatePost inserts a new post into the database
 func CreatePost(post models.Post) error {
-	_, err := db.DB.Exec(`INSERT INTO posts (user_id, content, image, privacy, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
-		post.UserID, post.Content, post.Image, post.Privacy)
+	// Inserting into the posts table
+	query := `INSERT INTO posts (user_id, content, image, privacy, created_at, updated_at) 
+              VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`
+
+	_, err := db.DB.Exec(query, post.UserID, post.Content, post.Image, post.Privacy)
 	if err != nil {
 		return fmt.Errorf("failed to create post: %w", err)
 	}
+
 	return nil
 }
 

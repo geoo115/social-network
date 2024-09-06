@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +14,18 @@ import (
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20) // Limit your max memory size
+
+	// Retrieve form fields
+	userIDStr := r.FormValue("user_id")
+	content := r.FormValue("content")
+	privacy := r.FormValue("privacy")
+
+	// Parse userID
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
 
 	// Retrieve the file from the form-data
 	file, handler, err := r.FormFile("image")
@@ -23,7 +36,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Define the path to save the file
-	uploadDir := "../../uploads" 
+	uploadDir := "../../uploads"
 	filePath := fmt.Sprintf("%s/%s", uploadDir, handler.Filename)
 
 	// Ensure the upload directory exists
@@ -50,7 +63,23 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Proceed with other logic like saving post metadata to the database
+	// Create a new post object
+	post := models.Post{
+		UserID:  userID,
+		Content: content,
+		Image:   filePath, // Store the image path
+		Privacy: privacy,
+	}
+
+	// Pass the post to the service layer for database insertion
+	err = services.CreatePost(post)
+	if err != nil {
+		log.Printf("Failed to create post: %v", err)
+		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with success
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully"})
 }

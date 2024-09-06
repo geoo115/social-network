@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS followers (
     FOREIGN KEY (follower_id) REFERENCES users(id),
     FOREIGN KEY (followed_id) REFERENCES users(id)
 );
+
