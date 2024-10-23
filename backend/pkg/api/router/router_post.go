@@ -19,9 +19,11 @@ func HandlePostRoutes(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		if postIDStr != "" {
+			// Fetch a specific post by ID
 			handlers.GetPost(w, r, postIDStr)
 		} else {
-			http.Error(w, "Post ID is required", http.StatusBadRequest)
+			// Fetch all posts when no post ID is provided
+			handlers.GetAllPosts(w, r)
 		}
 	case "PUT":
 		if postIDStr != "" {

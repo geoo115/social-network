@@ -38,6 +38,45 @@ func GetPost(postID int) (models.Post, error) {
 	return post, nil
 }
 
+// GetAllPosts fetches all posts from the database
+func GetAllPosts() ([]models.Post, error) {
+	// Define the SQL query
+	query := `
+	SELECT id, user_id, content, image, privacy, created_at, updated_at 
+	FROM posts
+	ORDER BY created_at DESC;
+	`
+
+	// Query the database
+	rows, err := db.DB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query posts: %w", err)
+	}
+	defer rows.Close()
+
+	// Initialize an empty slice to store the posts
+	var posts []models.Post
+
+	// Iterate over the rows and scan each row into a Post struct
+	for rows.Next() {
+		var post models.Post
+		err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.Image, &post.Privacy, &post.CreatedAt, &post.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan post: %w", err)
+		}
+		// Append each post to the slice
+		posts = append(posts, post)
+	}
+
+	// Check for errors from iterating over the rows
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over posts: %w", err)
+	}
+
+	// Return the slice of posts
+	return posts, nil
+}
+
 // UpdatePost updates the content of a post
 func UpdatePost(postID int, updatedPost models.Post) error {
 	_, err := db.DB.Exec(`UPDATE posts SET content = ?, image = ?, privacy = ?, updated_at = ? 

@@ -15,17 +15,17 @@ import (
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20) // Limit your max memory size
 
-	// Retrieve form fields
-	userIDStr := r.FormValue("user_id")
-	content := r.FormValue("content")
-	privacy := r.FormValue("privacy")
-
-	// Parse userID
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+	// Retrieve the userID from context (set by middleware)
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, "Unauthorized: User ID not found", http.StatusUnauthorized)
 		return
 	}
+	log.Printf("Received userID from context: %d", userID)
+
+	// Retrieve form fields
+	content := r.FormValue("content")
+	privacy := r.FormValue("privacy")
 
 	// Retrieve the file from the form-data
 	file, handler, err := r.FormFile("image")
@@ -101,6 +101,22 @@ func GetPost(w http.ResponseWriter, r *http.Request, postIDStr string) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(post); err != nil {
 		http.Error(w, "Failed to encode post", http.StatusInternalServerError)
+	}
+}
+
+// GetAllPosts handles retrieving all posts
+func GetAllPosts(w http.ResponseWriter, r *http.Request) {
+	// Retrieve all posts from the service layer
+	posts, err := services.GetAllPosts()
+	if err != nil {
+		http.Error(w, "Failed to retrieve posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Encode posts as JSON
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(posts); err != nil {
+		http.Error(w, "Failed to encode posts", http.StatusInternalServerError)
 	}
 }
 

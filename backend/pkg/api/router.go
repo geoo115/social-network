@@ -22,8 +22,9 @@ func InitializeRoutes(mux *http.ServeMux) {
 
 	mux.Handle("/profile/", middlewares.SessionAuthMiddleware(http.HandlerFunc(router.HandleProfileRoutes)))
 
-	mux.Handle("/post", middlewares.SessionAuthMiddleware(http.HandlerFunc(handlers.CreatePost)))
-	mux.Handle("/post/", middlewares.SessionAuthMiddleware(http.HandlerFunc(router.HandlePostRoutes)))
+	mux.Handle("/allposts", middlewares.SessionAuthMiddleware(http.HandlerFunc(handlers.GetAllPosts))) // GET request to retrieve posts
+	mux.Handle("/post", middlewares.SessionAuthMiddleware(http.HandlerFunc(handlers.CreatePost)))      // POST request to create a post
+	mux.Handle("/post/", middlewares.SessionAuthMiddleware(http.HandlerFunc(router.HandlePostRoutes))) // Handle sub-routes for specific posts
 
 	mux.Handle("/posts/like", middlewares.SessionAuthMiddleware(http.HandlerFunc(router.HandleLikeDislikeRoutes)))
 	mux.Handle("/posts/dislike", middlewares.SessionAuthMiddleware(http.HandlerFunc(router.HandleLikeDislikeRoutes)))

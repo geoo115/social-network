@@ -19,7 +19,7 @@ func Initialize() error {
 
 	// Open a connection to the SQLite database
 	var err error
-	DB, err = sql.Open("sqlite3", "./socialNetwork3.db")
+	DB, err = sql.Open("sqlite3", "./socialNetwork1.db")
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func Initialize() error {
 	// Create a new migration instance with the absolute path
 	m, err := migrate.New(
 		"file://"+filepath.ToSlash(migrationsDir),
-		"sqlite3://./socialNetwork3.db",
+		"sqlite3://./socialNetwork1.db",
 	)
 	if err != nil {
 		return err

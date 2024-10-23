@@ -3,7 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
 	"Social/pkg/api/middlewares"
 	"Social/pkg/models"
@@ -14,16 +19,54 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Register handles user registration
 func Register(w http.ResponseWriter, r *http.Request) {
-	var req models.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	// Parse the multipart form
+	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+	if err != nil {
+		log.Println("Error parsing form:", err)
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
+	}
+
+	var req models.RegisterRequest
+	req.Email = r.FormValue("email")
+	req.Password = r.FormValue("password")
+	req.FirstName = r.FormValue("first_name")
+	req.LastName = r.FormValue("last_name")
+	req.DateOfBirth = r.FormValue("date_of_birth")
+	req.Nickname = r.FormValue("nickname")
+	req.AboutMe = r.FormValue("about_me")
+	req.IsPrivate = r.FormValue("is_private") == "true"
+
+	log.Printf("Registering user: %+v", req)
+
+	// Handle avatar file upload
+	file, _, err := r.FormFile("avatarUrl")
+	if err != nil && err != http.ErrMissingFile {
+		log.Println("Error retrieving avatar:", err)
+		http.Error(w, "Error retrieving avatar", http.StatusBadRequest)
+		return
+	}
+	defer func() {
+		if file != nil {
+			file.Close()
+		}
+	}()
+
+	// Save the avatar file
+	if err == nil { // If a file is uploaded
+		avatarPath, err := saveAvatar(file)
+		if err != nil {
+			log.Println("Failed to save avatar:", err)
+			http.Error(w, "Failed to save avatar", http.StatusInternalServerError)
+			return
+		}
+		req.Avatar = avatarPath
 	}
 
 	// Validate request payload
 	if err := validateRegisterRequest(req); err != nil {
+		log.Println("Validation error:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -31,6 +74,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	// Call the service to register the user
 	if err := services.RegisterUser(req); err != nil {
 		if errors.Is(err, services.ErrEmailInUse) {
+			log.Println("Email already in use")
 			http.Error(w, "Email already in use", http.StatusConflict)
 			return
 		}
@@ -41,6 +85,27 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
+}
+
+func saveAvatar(file io.Reader) (string, error) {
+	// Example: Save the file to a directory
+	// Generate a unique filename (consider using a UUID or timestamp)
+	filename := fmt.Sprintf("%d_avatar.png", time.Now().UnixNano())
+	path := filepath.Join("uploads", filename) // Adjust path as necessary
+
+	outFile, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	defer outFile.Close()
+
+	// Copy the uploaded file to the destination
+	if _, err := io.Copy(outFile, file); err != nil {
+		return "", err
+	}
+
+	// Return the file path or URL
+	return path, nil
 }
 
 // Login handles user authentication
